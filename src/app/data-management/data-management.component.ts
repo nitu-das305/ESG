@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { ThemeService } from '../services/theme.service';
 
 @Component({
   selector: 'app-data-management',
@@ -345,7 +347,7 @@ import { RouterModule } from '@angular/router';
     <div class="dm-root" [class.dark-mode]="darkMode">
       <aside class="edash-sidenav" [class.collapsed]="sidebarCollapsed" [class.dark-mode]="darkMode">
         <div class="edash-sidenav-header">
-          <img src="assets/logo.png" alt="Logo" class="edash-logo" />
+          <img src="https://lms-frontend-resources.s3.ap-south-1.amazonaws.com/marlnLogo.jpeg" alt="Logo" class="edash-logo" />
           <span *ngIf="!sidebarCollapsed" class="edash-title">Sustainability Head</span>
         </div>
         <nav class="edash-nav">
@@ -353,13 +355,13 @@ import { RouterModule } from '@angular/router';
           <a routerLink="/team" class="edash-nav-link"><span class="edash-nav-icon">🧑‍🤝‍🧑</span><span *ngIf="!sidebarCollapsed">Manage Team</span></a>
           <a routerLink="/initiatives-dashboard" class="edash-nav-link"><span class="edash-nav-icon">📣</span><span *ngIf="!sidebarCollapsed">ESG Initiative</span></a>
           <a routerLink="/reporting" class="edash-nav-link"><span class="edash-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Reporting & Analysis</span></a>
-          <a routerLink="/communication-hub" routerLinkActive="active" class="edash-nav-link"><span class="edash-nav-icon">💬</span><span *ngIf="!sidebarCollapsed">Communication Hub</span></a>
-          <a routerLink="/training" class="edash-nav-link"><span class="edash-nav-icon">🎓</span><span *ngIf="!sidebarCollapsed">Training & Development</span></a>
+          
+          <a routerLink="/environmental-training" class="edash-nav-link"><span class="edash-nav-icon">🎓</span><span *ngIf="!sidebarCollapsed">Training & Development</span></a>
           <a routerLink="/workspace" class="edash-nav-link"><span class="edash-nav-icon">📁</span><span *ngIf="!sidebarCollapsed">Workspace</span></a>
           <a routerLink="/stakeholder-engagement" routerLinkActive="active" class="edash-nav-link"><span class="edash-nav-icon">🤝</span><span *ngIf="!sidebarCollapsed">Stakeholder Engagement</span></a>
           <a routerLink="/data-management" routerLinkActive="active" class="edash-nav-link"><span class="edash-nav-icon">🗄️</span><span *ngIf="!sidebarCollapsed">Data Management</span></a>
-          <a routerLink="/user-role-management" class="edash-nav-link"><span class="edash-nav-icon">👤</span><span *ngIf="!sidebarCollapsed">User & Role Management</span></a>
-          <a routerLink="/notifications" class="edash-nav-link"><span class="edash-nav-icon">🔔</span><span *ngIf="!sidebarCollapsed">Notifications & Alerts</span></a>
+          
+         
           <a routerLink="/calendar" class="edash-nav-link"><span class="edash-nav-icon">📅</span><span *ngIf="!sidebarCollapsed">Calendar & Events</span></a>
           <div class="edash-nav-actions">
             <button class="edash-sidenav-toggle" (click)="sidebarCollapsed=!sidebarCollapsed" aria-label="Toggle sidenav">
@@ -461,11 +463,33 @@ import { RouterModule } from '@angular/router';
   `,
 })
 
-export class DataManagementComponent {
+export class DataManagementComponent implements OnInit, OnDestroy {
   sidebarCollapsed = false;
   darkMode = false;
-  logout() { alert('Logged out!'); }
-  toggleDarkMode() { this.darkMode = !this.darkMode; }
+  private themeSubscription!: Subscription;
+  
+  constructor(private router: Router, private themeService: ThemeService) {}
+  
+  ngOnInit() {
+    this.themeSubscription = this.themeService.darkMode$.subscribe(
+      isDark => this.darkMode = isDark
+    );
+  }
+  
+  ngOnDestroy() {
+    if (this.themeSubscription) {
+      this.themeSubscription.unsubscribe();
+    }
+  }
+  
+  logout() { 
+    localStorage.removeItem('currentUser');
+    this.router.navigate(['/login']);
+  }
+  
+  toggleDarkMode() { 
+    this.themeService.toggleDarkMode(); 
+  }
 
   // Data Sources
   dataSources: string[] = ['IoT Sensors', 'Utility Bills', 'HR System', 'ERP System', 'Weather API'];

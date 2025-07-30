@@ -517,7 +517,7 @@ import { Router } from '@angular/router';
                 (change)="onRoleChange()"
                 required
               >
-                <option value="">Select your role</option>
+                <option value="marketing_head">Marketing Head</option>
                 <option value="sustainability-head">Sustainability Head</option>
                 <option value="esg-specialist">ESG Specialist</option>
                 <option value="environmental-manager">Environmental Manager</option>
@@ -573,6 +573,7 @@ export class LoginComponent implements OnInit {
     const descriptions: { [key: string]: string } = {
       'sustainability-head': 'Full access to all ESG dashboards and reporting capabilities. Strategic oversight and decision-making authority.',
       'esg-specialist': 'Access to Environmental, Social, and Governance dashboards. Comprehensive ESG analysis and monitoring.',
+      'marketing_head': 'Access to Marketing dashboards. Comprehensive Marketing analysis and monitoring.',
       'environmental-manager': 'Focus on environmental metrics, carbon footprint, energy consumption, and sustainability initiatives.',
       'social-manager': 'Employee engagement, community impact, diversity & inclusion, and social responsibility metrics.',
       'governance-manager': 'Board composition, compliance status, ethics & transparency, and governance frameworks.'
@@ -611,6 +612,9 @@ export class LoginComponent implements OnInit {
         break;
       case 'esg-specialist':
         this.router.navigate(['/esg-specialist']);
+        break;
+      case 'marketing_head':
+        this.router.navigate(['/marketing-dashboard']);
         break;
       case 'environmental-manager':
         this.router.navigate(['/environmental-dashboard']);

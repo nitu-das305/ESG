@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { ThemeService } from '../services/theme.service';
 
 @Component({
   selector: 'app-initiatives-dashboard',
@@ -9,7 +11,7 @@ import { RouterModule } from '@angular/router';
   imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <style>
-      .esg-root {
+      .edash-root {
         min-height: 100vh;
         background: #f8fafc;
         color: #222;
@@ -17,7 +19,7 @@ import { RouterModule } from '@angular/router';
         display: flex;
         flex-direction: row;
       }
-      .esg-sidenav {
+      .edash-sidenav {
         width: 260px;
         background: #fff;
         border-right: 1px solid #ececec;
@@ -31,48 +33,136 @@ import { RouterModule } from '@angular/router';
         z-index: 1000;
         overflow-y: auto;
         overflow-x: hidden;
-        transition: background 0.3s, color 0.3s, width 0.3s;
+        transition: all 0.3s ease;
       }
-      .esg-sidenav.collapsed {
+      
+      /* Custom scrollbar styling */
+      .edash-sidenav::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      .edash-sidenav::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      
+      .edash-sidenav::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+      
+      .edash-sidenav::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+      
+      .edash-sidenav.dark-mode::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+      
+      .edash-sidenav.dark-mode::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+      
+      /* Collapsed state styles */
+      .edash-sidenav.collapsed {
         width: 70px;
       }
-      .esg-root > .esg-main {
+      
+      .edash-sidenav.collapsed .edash-nav-link {
+        justify-content: center;
+        padding: 0.75rem 0.5rem;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-icon {
+        margin-right: 0;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-actions {
+        padding: 0 0.5rem 1rem 0.5rem;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-actions button {
+        justify-content: center;
+        padding: 0.5rem;
+        width: auto;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-actions .icon {
+        margin-right: 0;
+      }
+      
+      /* Tooltip for collapsed state */
+      .edash-sidenav.collapsed .edash-nav-link {
+        position: relative;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-link:hover::after {
+        content: attr(data-title);
+        position: absolute;
+        left: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #1f2937;
+        color: white;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        z-index: 1001;
+        margin-left: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-link span:not(.edash-nav-icon),
+      .edash-sidenav.collapsed .edash-nav-actions span:not(.icon) {
+        display: none;
+      }
+      .edash-sidenav.collapsed .edash-title {
+        display: none;
+      }
+      .edash-root > .edash-main {
         margin-left: 260px;
-        width: 100%;
-        padding-left: 2.5rem;
-        transition: margin-left 0.3s, padding-left 0.3s;
+        transition: margin-left 0.3s ease;
+        width: calc(100% - 260px);
+        min-height: 100vh;
       }
-      .esg-sidenav.collapsed ~ .esg-main {
+      .edash-root > .edash-main.sidebar-collapsed {
         margin-left: 70px;
-        padding-left: 1rem;
+        width: calc(100% - 70px);
       }
-      .esg-sidenav-header {
+      
+      .edash-sidenav.dark-mode {
+        background: #1a1a2e;
+        color: #e0e0e0;
+        border-right: 1px solid #333;
+      }
+      .edash-sidenav-header {
         padding: 2rem 1rem 1rem 1rem;
         display: flex;
         flex-direction: column;
         align-items: flex-start;
       }
-      .esg-logo {
+      .edash-logo {
         width: 48px;
         height: 48px;
         margin-bottom: 0.5rem;
       }
-      .esg-title {
+      .edash-title {
         font-size: 1.2rem;
         font-weight: 700;
         color: #2563eb;
-        transition: opacity 0.3s;
       }
-      .esg-sidenav.collapsed .esg-title {
-        opacity: 0;
+      .edash-sidenav.dark-mode .edash-title {
+        color: #7eaaff;
       }
-      .esg-nav {
+      .edash-nav {
         display: flex;
         flex-direction: column;
         padding: 1rem 0;
         flex: 1 1 auto;
+        overflow-y: auto;
+        max-height: calc(100vh - 200px);
       }
-      .esg-nav-link {
+      .edash-nav-link {
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -84,25 +174,35 @@ import { RouterModule } from '@angular/router';
         border-right: 3px solid transparent;
         transition: background 0.2s, color 0.2s;
       }
-      .esg-nav-link.active {
+      .edash-nav-link.active {
         background: #e6f0ff;
         color: #2563eb;
         border-right: 3px solid #2563eb;
       }
-      .esg-nav-link:hover {
+      .edash-nav-link:hover {
         background: #f3f4f6;
         color: #2563eb;
       }
-      .esg-sidenav.collapsed .esg-nav-link span:not(.esg-nav-icon) {
-        display: none;
+      .edash-sidenav.dark-mode .edash-nav-link {
+        color: #e0e0e0;
       }
-      .esg-nav-actions {
+      .edash-sidenav.dark-mode .edash-nav-link.active {
+        background: #223c2c;
+        color: #7eaaff;
+        border-right: 3px solid #7eaaff;
+      }
+      .edash-sidenav.dark-mode .edash-nav-link:hover {
+        background: #22223c;
+        color: #7eaaff;
+      }
+      .edash-nav-actions {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
         margin-top: 2rem;
+        padding: 0 1rem 1rem 1rem;
       }
-      .esg-nav-actions button {
+      .edash-nav-actions button {
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -112,36 +212,52 @@ import { RouterModule } from '@angular/router';
         border: none;
         background: none;
         cursor: pointer;
-        transition: background 0.2s, color 0.2s;
+        transition: all 0.2s ease;
         color: #333;
+        width: 100%;
+        justify-content: flex-start;
       }
-      .esg-nav-actions button:focus {
+      .edash-nav-actions button:focus {
         outline: 2px solid #2563eb;
         outline-offset: 2px;
       }
-      .esg-nav-actions button:hover {
+      .edash-nav-actions button:hover {
         background: #f3f4f6;
         color: #2563eb;
       }
-      .esg-nav-actions .icon {
+      .edash-sidenav.dark-mode .edash-nav-actions button {
+        color: #e0e0e0;
+      }
+      .edash-sidenav.dark-mode .edash-nav-actions button:hover {
+        background: #23284a;
+        color: #7eaaff;
+      }
+      .edash-nav-actions .icon {
         font-size: 1.2rem;
         display: inline-block;
       }
-      .esg-nav-actions .esg-logout {
+      .edash-nav-actions .edash-logout {
         color: #dc3545;
         font-weight: 600;
       }
-      .esg-nav-actions .esg-logout:hover {
+      .edash-sidenav.dark-mode .edash-nav-actions .edash-logout {
+        color: #ffb3b3;
+      }
+      .edash-nav-actions .edash-logout:hover {
         background: #ffe6e6;
         color: #a71d2a;
       }
-      .esg-summary-row {
+      .edash-sidenav.dark-mode .edash-nav-actions .edash-logout:hover {
+        background: #3a1a1a;
+        color: #ff4d4d;
+      }
+      .edash-summary-row {
         display: flex;
         gap: 2rem;
         margin: 2rem 0 2.5rem 0;
         flex-wrap: wrap;
       }
-      .esg-summary-card {
+      .edash-summary-card {
         background: #fff;
         border-radius: 16px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.04);
@@ -155,20 +271,20 @@ import { RouterModule } from '@angular/router';
         position: relative;
         transition: background 0.3s, color 0.3s;
       }
-      .esg-summary-label {
+      .edash-summary-label {
         font-size: 1rem;
         color: #666;
         margin-bottom: 0.5rem;
         transition: color 0.3s;
       }
-      .esg-summary-value {
+      .edash-summary-value {
         font-size: 2rem;
         font-weight: 700;
         color: #111827;
         margin-bottom: 0.25rem;
         transition: color 0.3s;
       }
-      .esg-summary-change {
+      .edash-summary-change {
         position: absolute;
         top: 1.5rem;
         right: 1.5rem;
@@ -176,12 +292,12 @@ import { RouterModule } from '@angular/router';
         font-weight: 600;
         font-size: 1rem;
       }
-      .esg-summary-actions {
+      .edash-summary-actions {
         display: flex;
         justify-content: flex-end;
         margin-bottom: 1.5rem;
       }
-      .esg-summary-actions button {
+      .edash-summary-actions button {
         background: #f3f4f6;
         border: none;
         border-radius: 8px;
@@ -191,61 +307,27 @@ import { RouterModule } from '@angular/router';
         cursor: pointer;
         transition: background 0.2s;
       }
-      .esg-summary-actions button:hover {
+      .edash-summary-actions button:hover {
         background: #e6f0ff;
       }
-      .esg-root.dark-mode {
+      .edash-root.dark-mode {
         background: #181828;
         color: #e0e0e0;
       }
-      .esg-root.dark-mode .esg-main {
+      .edash-root.dark-mode .edash-main {
         background: #181828;
         color: #e0e0e0;
       }
-      .esg-root.dark-mode .esg-summary-card {
+      .edash-root.dark-mode .edash-summary-card {
         background: #23284a;
         color: #e0e0e0;
         border: 1px solid #333;
       }
-      .esg-root.dark-mode .esg-summary-label {
+      .edash-root.dark-mode .edash-summary-label {
         color: #b0b0b0;
       }
-      .esg-root.dark-mode .esg-summary-value {
+      .edash-root.dark-mode .edash-summary-value {
         color: #fff;
-      }
-      .esg-sidenav.dark-mode {
-        background: #1a1a2e;
-        color: #e0e0e0;
-        border-right: 1px solid #333;
-      }
-      .esg-sidenav.dark-mode .esg-title {
-        color: #7eaaff;
-      }
-      .esg-sidenav.dark-mode .esg-nav-link {
-        color: #e0e0e0;
-      }
-      .esg-sidenav.dark-mode .esg-nav-link.active {
-        background: #223c2c;
-        color: #7eaaff;
-        border-right: 3px solid #7eaaff;
-      }
-      .esg-sidenav.dark-mode .esg-nav-link:hover {
-        background: #22223c;
-        color: #7eaaff;
-      }
-      .esg-sidenav.dark-mode .esg-nav-actions button {
-        color: #e0e0e0;
-      }
-      .esg-sidenav.dark-mode .esg-nav-actions button:hover {
-        background: #23284a;
-        color: #7eaaff;
-      }
-      .esg-sidenav.dark-mode .esg-nav-actions .esg-logout {
-        color: #ffb3b3;
-      }
-      .esg-sidenav.dark-mode .esg-nav-actions .esg-logout:hover {
-        background: #3a1a1a;
-        color: #ff4d4d;
       }
       .initiatives-dashboard-root {
         max-width: 1200px;
@@ -436,102 +518,100 @@ import { RouterModule } from '@angular/router';
         background: #7eaaff;
         color: #23284a;
       }
-      .esg-root.dark-mode .initiatives-dashboard-root {
+      .edash-root.dark-mode .initiatives-dashboard-root {
         background: #23284a;
         color: #e0e0e0;
         border: 1px solid #333;
       }
-      .esg-root.dark-mode .initiatives-header {
+      .edash-root.dark-mode .initiatives-header {
         color: #7eaaff;
       }
-      .esg-root.dark-mode .initiatives-section h2 {
+      .edash-root.dark-mode .initiatives-section h2 {
         color: #7eaaff;
       }
-      .esg-root.dark-mode .initiatives-table th {
+      .edash-root.dark-mode .initiatives-table th {
         background: #23284a;
         color: #b0b0b0;
       }
-      .esg-root.dark-mode .initiatives-table td {
+      .edash-root.dark-mode .initiatives-table td {
         background: #23284a;
         color: #e0e0e0;
       }
-      .esg-root.dark-mode .proposal-form input,
-      .esg-root.dark-mode .proposal-form textarea {
+      .edash-root.dark-mode .proposal-form input,
+      .edash-root.dark-mode .proposal-form textarea {
         background: #181828;
         color: #e0e0e0;
         border: 1px solid #333;
       }
-      .esg-root.dark-mode .proposal-form button,
-      .esg-root.dark-mode .esg-summary-actions button {
+      .edash-root.dark-mode .proposal-form button,
+      .edash-root.dark-mode .edash-summary-actions button {
         background: #223c2c;
         color: #e0e0e0;
       }
-      .esg-root.dark-mode .proposal-form button:hover,
-      .esg-root.dark-mode .esg-summary-actions button:hover {
+      .edash-root.dark-mode .proposal-form button:hover,
+      .edash-root.dark-mode .edash-summary-actions button:hover {
         background: #2563eb;
         color: #fff;
       }
     </style>
-    <div class="esg-root" [class.dark-mode]="darkMode">
-      <aside class="esg-sidenav" [class.collapsed]="sidebarCollapsed" [class.dark-mode]="darkMode">
-        <div class="esg-sidenav-header">
-          <img src="assets/logo.png" alt="Logo" class="esg-logo" />
-          <span class="esg-title" *ngIf="!sidebarCollapsed">ESG Initiative Dashboard</span>
+    <div class="edash-root" [class.dark-mode]="darkMode">
+      <aside class="edash-sidenav" [class.collapsed]="sidebarCollapsed" [class.dark-mode]="darkMode">
+        <div class="edash-sidenav-header">
+          <img src="https://lms-frontend-resources.s3.ap-south-1.amazonaws.com/marlnLogo.jpeg" alt="Logo" class="edash-logo" />
+          <span *ngIf="!sidebarCollapsed" class="edash-title">Sustainability Head</span>
         </div>
-        <nav class="esg-nav">
-          <a routerLink="/environmental-dashboard" routerLinkActive="active" class="esg-nav-link"><span class="esg-nav-icon">🌱</span><span *ngIf="!sidebarCollapsed">Sustainability Dashboard</span></a>
-          <a routerLink="/materiality" routerLinkActive="active" class="esg-nav-link"><span class="esg-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Materiality Assessment</span></a>
-          <a routerLink="/team" routerLinkActive="active" class="esg-nav-link"><span class="esg-nav-icon">🧑‍🤝‍🧑</span><span *ngIf="!sidebarCollapsed">Manage Team</span></a>
-          <a routerLink="/initiatives-dashboard" routerLinkActive="active" class="esg-nav-link"><span class="esg-nav-icon">📣</span><span *ngIf="!sidebarCollapsed">ESG Initiative</span></a>
-          <a routerLink="/reporting" routerLinkActive="active" class="esg-nav-link"><span class="esg-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Reporting & Analysis</span></a>
-          <a routerLink="/communication" routerLinkActive="active" class="esg-nav-link"><span class="esg-nav-icon">💬</span><span *ngIf="!sidebarCollapsed">Communication Hub</span></a>
-          <a routerLink="/training" routerLinkActive="active" class="esg-nav-link"><span class="esg-nav-icon">🎓</span><span *ngIf="!sidebarCollapsed">Training & Development</span></a>
-          <a routerLink="/workspace" routerLinkActive="active" class="esg-nav-link"><span class="esg-nav-icon">📁</span><span *ngIf="!sidebarCollapsed">Workspace</span></a>
-          <a routerLink="/stakeholder-engagement" routerLinkActive="active" class="esg-nav-link"><span class="esg-nav-icon">🤝</span><span *ngIf="!sidebarCollapsed">Stakeholder Engagement</span></a>
-          <a routerLink="/data-management" routerLinkActive="active" class="esg-nav-link"><span class="esg-nav-icon">🗄️</span><span *ngIf="!sidebarCollapsed">Data Management</span></a>
-          <a routerLink="/user-role-management" routerLinkActive="active" class="esg-nav-link"><span class="esg-nav-icon">👤</span><span *ngIf="!sidebarCollapsed">User & Role Management</span></a>
-          <a routerLink="/notifications" routerLinkActive="active" class="esg-nav-link"><span class="esg-nav-icon">🔔</span><span *ngIf="!sidebarCollapsed">Notifications & Alerts</span></a>
-          <a routerLink="/calendar" routerLinkActive="active" class="esg-nav-link"><span class="esg-nav-icon">📅</span><span *ngIf="!sidebarCollapsed">Calendar & Events</span></a>
-          <div class="esg-nav-actions">
-            <button class="esg-sidenav-toggle" (click)="sidebarCollapsed=!sidebarCollapsed" aria-label="Toggle sidenav">
+        <nav class="edash-nav">
+        <a routerLink="/environmental-dashboard" class="edash-nav-link"><span class="edash-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Sustainability Head</span></a>
+          <a routerLink="/materiality" class="edash-nav-link"><span class="edash-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Materiality Assessment</span></a>
+          <a routerLink="/team" class="edash-nav-link"><span class="edash-nav-icon">🧑‍🤝‍🧑</span><span *ngIf="!sidebarCollapsed">Manage Team</span></a>
+          <a routerLink="/initiatives-dashboard" class="edash-nav-link"><span class="edash-nav-icon">📣</span><span *ngIf="!sidebarCollapsed">ESG Initiative</span></a>
+          <a routerLink="/reporting" class="edash-nav-link"><span class="edash-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Reporting & Analysis</span></a>
+          
+          <a routerLink="/environmental-training" class="edash-nav-link"><span class="edash-nav-icon">🎓</span><span *ngIf="!sidebarCollapsed">Training & Development</span></a>
+          
+          <a routerLink="/stakeholder-engagement" routerLinkActive="active" class="edash-nav-link"><span class="edash-nav-icon">🤝</span><span *ngIf="!sidebarCollapsed">Stakeholder Engagement</span></a>
+          <a routerLink="/data-management" routerLinkActive="active" class="edash-nav-link"><span class="edash-nav-icon">🗄️</span><span *ngIf="!sidebarCollapsed">Data Management</span></a>
+  
+          <div class="edash-nav-actions">
+            <button class="edash-sidenav-toggle" (click)="sidebarCollapsed=!sidebarCollapsed" aria-label="Toggle sidenav">
               <span class="icon">{{ sidebarCollapsed ? '➡️' : '⬅️' }}</span>
               <span *ngIf="!sidebarCollapsed">Collapse</span>
             </button>
-            <button class="esg-dark-toggle" (click)="toggleDarkMode()" aria-label="Toggle dark mode">
+            <button class="edash-dark-toggle" (click)="toggleDarkMode()" aria-label="Toggle dark mode">
               <span class="icon">{{ darkMode ? '☀️' : '🌙' }}</span>
               <span *ngIf="!sidebarCollapsed">{{ darkMode ? 'Light' : 'Dark' }} Mode</span>
             </button>
-            <button class="esg-logout" (click)="logout()" aria-label="Logout">
+            <button class="edash-logout" (click)="logout()" aria-label="Logout">
               <span class="icon">🚪</span>
               <span *ngIf="!sidebarCollapsed">Logout</span>
             </button>
           </div>
         </nav>
       </aside>
-      <main class="esg-main">
-        <div class="esg-summary-actions">
+      <main class="edash-main" [class.sidebar-collapsed]="sidebarCollapsed">
+        <div class="edash-summary-actions">
           <button>Export Report</button>
         </div>
-        <div class="esg-summary-row">
-          <div class="esg-summary-card">
-            <div class="esg-summary-label">Total Budget</div>
-            <div class="esg-summary-value">$155,000</div>
-            <div class="esg-summary-change">+15%</div>
+        <div class="edash-summary-row">
+          <div class="edash-summary-card">
+            <div class="edash-summary-label">Total Budget</div>
+            <div class="edash-summary-value">$155,000</div>
+            <div class="edash-summary-change">+15%</div>
           </div>
-          <div class="esg-summary-card">
-            <div class="esg-summary-label">Total Spent</div>
-            <div class="esg-summary-value">$100,000</div>
-            <div class="esg-summary-change">+8%</div>
+          <div class="edash-summary-card">
+            <div class="edash-summary-label">Total Spent</div>
+            <div class="edash-summary-value">$100,000</div>
+            <div class="edash-summary-change">+8%</div>
           </div>
-          <div class="esg-summary-card">
-            <div class="esg-summary-label">Total Leads</div>
-            <div class="esg-summary-value">750</div>
-            <div class="esg-summary-change">+25%</div>
+          <div class="edash-summary-card">
+            <div class="edash-summary-label">Total Leads</div>
+            <div class="edash-summary-value">750</div>
+            <div class="edash-summary-change">+25%</div>
           </div>
-          <div class="esg-summary-card">
-            <div class="esg-summary-label">Total Conversions</div>
-            <div class="esg-summary-value">165</div>
-            <div class="esg-summary-change">+18%</div>
+          <div class="edash-summary-card">
+            <div class="edash-summary-label">Total Conversions</div>
+            <div class="edash-summary-value">165</div>
+            <div class="edash-summary-change">+18%</div>
           </div>
         </div>
         <div class="initiatives-dashboard-root">
@@ -655,11 +735,33 @@ import { RouterModule } from '@angular/router';
   `,
 })
 
-export class InitiativesDashboardComponent {
+export class InitiativesDashboardComponent implements OnInit, OnDestroy {
   sidebarCollapsed = false;
   darkMode = false;
-  logout() { alert('Logged out!'); }
-  toggleDarkMode() { this.darkMode = !this.darkMode; }
+  private themeSubscription!: Subscription;
+  
+  constructor(private router: Router, private themeService: ThemeService) {}
+  
+  ngOnInit() {
+    this.themeSubscription = this.themeService.darkMode$.subscribe(
+      isDark => this.darkMode = isDark
+    );
+  }
+  
+  ngOnDestroy() {
+    if (this.themeSubscription) {
+      this.themeSubscription.unsubscribe();
+    }
+  }
+  
+  logout() { 
+    localStorage.removeItem('currentUser');
+    this.router.navigate(['/login']);
+  }
+  
+  toggleDarkMode() { 
+    this.themeService.toggleDarkMode(); 
+  }
 
   activeProjects = [
     { name: 'Renewable Energy Adoption', status: 'Ongoing', owner: 'Alice', progress: 60 },

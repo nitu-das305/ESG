@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { ThemeService } from '../services/theme.service';
 
 @Component({
   selector: 'app-communication-hub',
@@ -9,7 +11,7 @@ import { RouterModule } from '@angular/router';
   imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <style>
-      .comm-root {
+      .edash-root {
         min-height: 100vh;
         background: #f8fafc;
         color: #222;
@@ -17,7 +19,7 @@ import { RouterModule } from '@angular/router';
         display: flex;
         flex-direction: row;
       }
-      .comm-sidenav {
+      .edash-sidenav {
         width: 260px;
         background: #fff;
         border-right: 1px solid #ececec;
@@ -31,48 +33,136 @@ import { RouterModule } from '@angular/router';
         z-index: 1000;
         overflow-y: auto;
         overflow-x: hidden;
-        transition: background 0.3s, color 0.3s, width 0.3s;
+        transition: all 0.3s ease;
       }
-      .comm-sidenav.collapsed {
+      
+      /* Custom scrollbar styling */
+      .edash-sidenav::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      .edash-sidenav::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      
+      .edash-sidenav::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+      
+      .edash-sidenav::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+      
+      .edash-sidenav.dark-mode::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+      
+      .edash-sidenav.dark-mode::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+      
+      /* Collapsed state styles */
+      .edash-sidenav.collapsed {
         width: 70px;
       }
-      .comm-root > .comm-main {
+      
+      .edash-sidenav.collapsed .edash-nav-link {
+        justify-content: center;
+        padding: 0.75rem 0.5rem;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-icon {
+        margin-right: 0;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-actions {
+        padding: 0 0.5rem 1rem 0.5rem;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-actions button {
+        justify-content: center;
+        padding: 0.5rem;
+        width: auto;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-actions .icon {
+        margin-right: 0;
+      }
+      
+      /* Tooltip for collapsed state */
+      .edash-sidenav.collapsed .edash-nav-link {
+        position: relative;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-link:hover::after {
+        content: attr(data-title);
+        position: absolute;
+        left: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #1f2937;
+        color: white;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        z-index: 1001;
+        margin-left: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-link span:not(.edash-nav-icon),
+      .edash-sidenav.collapsed .edash-nav-actions span:not(.icon) {
+        display: none;
+      }
+      .edash-sidenav.collapsed .edash-title {
+        display: none;
+      }
+      .edash-root > .edash-main {
         margin-left: 260px;
-        width: 100%;
-        padding-left: 2.5rem;
-        transition: margin-left 0.3s, padding-left 0.3s;
+        transition: margin-left 0.3s ease;
+        width: calc(100% - 260px);
+        min-height: 100vh;
       }
-      .comm-sidenav.collapsed ~ .comm-main {
+      .edash-root > .edash-main.sidebar-collapsed {
         margin-left: 70px;
-        padding-left: 1rem;
+        width: calc(100% - 70px);
       }
-      .comm-sidenav-header {
+      
+      .edash-sidenav.dark-mode {
+        background: #1a1a2e;
+        color: #e0e0e0;
+        border-right: 1px solid #333;
+      }
+      .edash-sidenav-header {
         padding: 2rem 1rem 1rem 1rem;
         display: flex;
         flex-direction: column;
         align-items: flex-start;
       }
-      .comm-logo {
+      .edash-logo {
         width: 48px;
         height: 48px;
         margin-bottom: 0.5rem;
       }
-      .comm-title {
+      .edash-title {
         font-size: 1.2rem;
         font-weight: 700;
         color: #2563eb;
-        transition: opacity 0.3s;
       }
-      .comm-sidenav.collapsed .comm-title {
-        opacity: 0;
+      .edash-sidenav.dark-mode .edash-title {
+        color: #7eaaff;
       }
-      .comm-nav {
+      .edash-nav {
         display: flex;
         flex-direction: column;
         padding: 1rem 0;
         flex: 1 1 auto;
+        overflow-y: auto;
+        max-height: calc(100vh - 200px);
       }
-      .comm-nav-link {
+      .edash-nav-link {
         display: flex;
         align-items: center;
         gap: 0.75rem;
@@ -84,122 +174,89 @@ import { RouterModule } from '@angular/router';
         border-right: 3px solid transparent;
         transition: background 0.2s, color 0.2s;
       }
-      .comm-nav-link.active {
+      .edash-nav-link.active {
         background: #e6f0ff;
         color: #2563eb;
         border-right: 3px solid #2563eb;
       }
-      .comm-nav-link:hover {
+      .edash-nav-link:hover {
         background: #f3f4f6;
         color: #2563eb;
       }
-      .comm-sidenav.collapsed .comm-nav-link span:not(.comm-nav-icon) {
-        display: none;
+      .edash-sidenav.dark-mode .edash-nav-link {
+        color: #e0e0e0;
       }
-      .comm-nav-actions {
+      .edash-sidenav.dark-mode .edash-nav-link.active {
+        background: #223c2c;
+        color: #7eaaff;
+        border-right: 3px solid #7eaaff;
+      }
+      .edash-sidenav.dark-mode .edash-nav-link:hover {
+        background: #22223c;
+        color: #7eaaff;
+      }
+      .edash-nav-actions {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
         margin-top: 2rem;
       }
-      .comm-nav-actions button {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 1rem;
-        padding: 0.5rem 1.5rem;
-        border-radius: 6px;
-        border: none;
-        background: none;
-        cursor: pointer;
-        transition: background 0.2s, color 0.2s;
-        color: #333;
-      }
-      .comm-nav-actions button:focus {
-        outline: 2px solid #2563eb;
-        outline-offset: 2px;
-      }
-      .comm-nav-actions button:hover {
-        background: #f3f4f6;
-        color: #2563eb;
-      }
-      .comm-nav-actions .icon {
-        font-size: 1.2rem;
-        display: inline-block;
-      }
-      .comm-nav-actions .comm-logout {
-        color: #dc3545;
-        font-weight: 600;
-      }
-      .comm-nav-actions .comm-logout:hover {
-        background: #ffe6e6;
-        color: #a71d2a;
-      }
-      .comm-root.dark-mode {
-        background: #181828;
+      /* Remove old navigation action styles as they're now handled by edash-nav-actions */
+      /* Communication Hub specific dark mode styles */
+      .edash-main.dark-mode .comm-main-content {
+        background: #0f172a;
         color: #e0e0e0;
       }
-      .comm-root.dark-mode .comm-main {
-        background: #181828;
+      .edash-main.dark-mode .comm-header {
         color: #e0e0e0;
       }
-      .comm-root.dark-mode .comm-main-content {
-        background: #23284a;
-        color: #e0e0e0;
-        border: 1px solid #333;
-      }
-      .comm-root.dark-mode .comm-header {
+      .edash-main.dark-mode .comm-section h2 {
         color: #7eaaff;
       }
-      .comm-root.dark-mode .comm-section h2 {
-        color: #7eaaff;
+      .edash-main.dark-mode .comm-section {
+        background: #1e293b;
+        border: 1px solid #334155;
       }
-      .comm-root.dark-mode .comm-table th {
-        background: #23284a;
-        color: #b0b0b0;
+      .edash-main.dark-mode .comm-input {
+        background: #1e293b;
+        color: #e0e0e0;
+        border: 1px solid #334155;
       }
-      .comm-root.dark-mode .comm-table td {
-        background: #23284a;
+      .edash-main.dark-mode .comm-btn {
+        background: #2563eb;
         color: #e0e0e0;
       }
-      .comm-sidenav.dark-mode {
-        background: #1a1a2e;
+      .edash-main.dark-mode .comm-btn:hover {
+        background: #1d4ed8;
+      }
+      .edash-main.dark-mode .comm-news-item,
+      .edash-main.dark-mode .comm-msg-item,
+      .edash-main.dark-mode .comm-doc-item,
+      .edash-main.dark-mode .comm-calendar-item,
+      .edash-main.dark-mode .comm-contact-item,
+      .edash-main.dark-mode .comm-risk-item {
+        background: #334155;
         color: #e0e0e0;
-        border-right: 1px solid #333;
+        border: 1px solid #475569;
       }
-      .comm-sidenav.dark-mode .comm-title {
-        color: #7eaaff;
-      }
-      .comm-sidenav.dark-mode .comm-nav-link {
+      .edash-main.dark-mode .comm-search-input {
+        background: #1e293b;
         color: #e0e0e0;
+        border: 1px solid #334155;
       }
-      .comm-sidenav.dark-mode .comm-nav-link.active {
-        background: #223c2c;
-        color: #7eaaff;
-        border-right: 3px solid #7eaaff;
-      }
-      .comm-sidenav.dark-mode .comm-nav-link:hover {
-        background: #22223c;
+      .edash-main.dark-mode .comm-msg-user {
         color: #7eaaff;
       }
-      .comm-sidenav.dark-mode .comm-nav-actions button {
-        color: #e0e0e0;
-      }
-      .comm-sidenav.dark-mode .comm-nav-actions button:hover {
-        background: #23284a;
+      .edash-main.dark-mode .comm-doc-link {
         color: #7eaaff;
       }
-      .comm-sidenav.dark-mode .comm-nav-actions .comm-logout {
-        color: #ffb3b3;
-      }
-      .comm-sidenav.dark-mode .comm-nav-actions .comm-logout:hover {
-        background: #3a1a1a;
-        color: #ff4d4d;
+      .edash-main.dark-mode .comm-doc-link:hover {
+        color: #93c5fd;
       }
       .comm-main-content {
         max-width: 1200px;
-        margin: 2rem auto;
-        padding: 2rem;
+        margin: 0 auto;
+        padding: 1rem;
         background: #fff;
         border-radius: 18px;
         box-shadow: 0 6px 32px rgba(0,0,0,0.07);
@@ -256,14 +313,8 @@ import { RouterModule } from '@angular/router';
       .heatmap-medium { background: #facc15; color: #222; }
       .heatmap-high { background: #ef4444; }
       @media (max-width: 900px) {
-        .comm-sidenav {
-          position: static;
-          width: 100%;
-          height: auto;
-        }
-        .comm-root > .comm-main {
-          margin-left: 0;
-          padding-left: 0.5rem;
+        .comm-main-content {
+          padding: 0.5rem;
         }
       }
       .comm-section-header {
@@ -294,11 +345,6 @@ import { RouterModule } from '@angular/router';
         border-radius: 6px;
       }
       .comm-textarea { min-height: 60px; }
-      .comm-root.dark-mode .comm-input, .comm-root.dark-mode .comm-textarea {
-        background: #181828;
-        color: #e0e0e0;
-        border: 1px solid #333;
-      }
       .comm-news-list, .comm-msg-list, .comm-doc-list, .comm-calendar-list, .comm-contact-list, .comm-audit-list {
         list-style: none;
         padding: 0;
@@ -313,65 +359,80 @@ import { RouterModule } from '@angular/router';
         justify-content: space-between;
         align-items: center;
       }
-      .comm-root.dark-mode .comm-news-item,
-      .comm-root.dark-mode .comm-msg-item,
-      .comm-root.dark-mode .comm-doc-item,
-      .comm-root.dark-mode .comm-calendar-item,
-      .comm-root.dark-mode .comm-contact-item,
-      .comm-root.dark-mode .comm-audit-item {
-        background: #23284a;
-        color: #e0e0e0;
-      }
       .comm-news-title { font-weight: 600; }
       .comm-msg-user { font-weight: 600; color: #2563eb; margin-right: 0.5rem; }
-      .comm-root.dark-mode .comm-msg-user { color: #7eaaff; }
       .comm-doc-link { color: #2563eb; text-decoration: underline; cursor: pointer; }
-      .comm-root.dark-mode .comm-doc-link { color: #7eaaff; }
       .comm-calendar-date { font-weight: 600; margin-right: 0.5rem; }
       .comm-contact-email, .comm-contact-phone { margin-left: 0.5rem; color: #2563eb; text-decoration: underline; cursor: pointer; }
-      .comm-root.dark-mode .comm-contact-email, .comm-root.dark-mode .comm-contact-phone { color: #7eaaff; }
       .comm-heatmap-cell.selected { outline: 2px solid #2563eb; }
       .comm-search-bar { margin-bottom: 1rem; }
       .comm-search-input { width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid #ccc; }
-      .comm-root.dark-mode .comm-search-input { background: #181828; color: #e0e0e0; border: 1px solid #333; }
     </style>
-    <div class="comm-root" [class.dark-mode]="darkMode">
-      <aside class="comm-sidenav" [class.collapsed]="sidebarCollapsed" [class.dark-mode]="darkMode">
-        <div class="comm-sidenav-header">
-          <img src="assets/logo.png" alt="Logo" class="comm-logo" />
-          <span class="comm-title" *ngIf="!sidebarCollapsed">Communication Hub</span>
+    <div class="edash-root" [class.dark-mode]="darkMode">
+      <aside class="edash-sidenav" [class.collapsed]="sidebarCollapsed" [class.dark-mode]="darkMode">
+        <div class="edash-sidenav-header">
+          <img src="https://lms-frontend-resources.s3.ap-south-1.amazonaws.com/marlnLogo.jpeg" alt="Logo" class="edash-logo" />
+          <span *ngIf="!sidebarCollapsed" class="edash-title">Sustainability Head</span>
         </div>
-        <nav class="comm-nav">
-          <a routerLink="/environmental-dashboard" routerLinkActive="active" class="comm-nav-link"><span class="comm-nav-icon">🌱</span><span *ngIf="!sidebarCollapsed">Sustainability Dashboard</span></a>
-          <a routerLink="/materiality" routerLinkActive="active" class="comm-nav-link"><span class="comm-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Materiality Assessment</span></a>
-          <a routerLink="/team" routerLinkActive="active" class="comm-nav-link"><span class="comm-nav-icon">🧑‍🤝‍🧑</span><span *ngIf="!sidebarCollapsed">Manage Team</span></a>
-          <a routerLink="/initiatives-dashboard" routerLinkActive="active" class="comm-nav-link"><span class="comm-nav-icon">📣</span><span *ngIf="!sidebarCollapsed">ESG Initiative</span></a>
-          <a routerLink="/reporting" routerLinkActive="active" class="comm-nav-link"><span class="comm-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Reporting & Analysis</span></a>
-          <a routerLink="/communication-hub" routerLinkActive="active" class="comm-nav-link"><span class="comm-nav-icon">💬</span><span *ngIf="!sidebarCollapsed">Communication Hub</span></a>
-          <a routerLink="/training" routerLinkActive="active" class="comm-nav-link"><span class="comm-nav-icon">🎓</span><span *ngIf="!sidebarCollapsed">Training & Development</span></a>
-          <a routerLink="/workspace" routerLinkActive="active" class="comm-nav-link"><span class="comm-nav-icon">📁</span><span *ngIf="!sidebarCollapsed">Workspace</span></a>
-          <a routerLink="/stakeholder-engagement" routerLinkActive="active" class="comm-nav-link"><span class="comm-nav-icon">🤝</span><span *ngIf="!sidebarCollapsed">Stakeholder Engagement</span></a>
-          <a routerLink="/data-management" routerLinkActive="active" class="comm-nav-link"><span class="comm-nav-icon">🗄️</span><span *ngIf="!sidebarCollapsed">Data Management</span></a>
-          <a routerLink="/user-role-management" routerLinkActive="active" class="comm-nav-link"><span class="comm-nav-icon">👤</span><span *ngIf="!sidebarCollapsed">User & Role Management</span></a>
-          <a routerLink="/notifications" routerLinkActive="active" class="comm-nav-link"><span class="comm-nav-icon">🔔</span><span *ngIf="!sidebarCollapsed">Notifications & Alerts</span></a>
-          <a routerLink="/calendar" routerLinkActive="active" class="comm-nav-link"><span class="comm-nav-icon">📅</span><span *ngIf="!sidebarCollapsed">Calendar & Events</span></a>
-          <div class="comm-nav-actions">
-            <button class="comm-sidenav-toggle" (click)="sidebarCollapsed=!sidebarCollapsed" aria-label="Toggle sidenav">
-              <span class="icon">{{ sidebarCollapsed ? '➡️' : '⬅️' }}</span>
-              <span *ngIf="!sidebarCollapsed">Collapse</span>
-            </button>
-            <button class="comm-dark-toggle" (click)="toggleDarkMode()" aria-label="Toggle dark mode">
-              <span class="icon">{{ darkMode ? '☀️' : '🌙' }}</span>
-              <span *ngIf="!sidebarCollapsed">{{ darkMode ? 'Light' : 'Dark' }} Mode</span>
-            </button>
-            <button class="comm-logout" (click)="logout()" aria-label="Logout">
+        <nav class="edash-nav">
+          <a routerLink="/environmental-dashboard" class="edash-nav-link" data-title="Sustainability Head">
+            <span class="edash-nav-icon">📊</span>
+            <span *ngIf="!sidebarCollapsed">Sustainability Head</span>
+          </a>
+          <a routerLink="/materiality" class="edash-nav-link" data-title="Materiality Assessment">
+            <span class="edash-nav-icon">📊</span>
+            <span *ngIf="!sidebarCollapsed">Materiality Assessment</span>
+          </a>
+          <a routerLink="/team" class="edash-nav-link" data-title="Manage Team">
+            <span class="edash-nav-icon">🧑‍🤝‍🧑</span>
+            <span *ngIf="!sidebarCollapsed">Manage Team</span>
+          </a>
+          <a routerLink="/initiatives-dashboard" class="edash-nav-link" data-title="ESG Initiative">
+            <span class="edash-nav-icon">📣</span>
+            <span *ngIf="!sidebarCollapsed">ESG Initiative</span>
+          </a>
+          <a routerLink="/reporting" class="edash-nav-link" data-title="Reporting & Analysis">
+            <span class="edash-nav-icon">📊</span>
+            <span *ngIf="!sidebarCollapsed">Reporting & Analysis</span>
+          </a>
+          
+          <a routerLink="/training" class="edash-nav-link" data-title="Training & Development">
+            <span class="edash-nav-icon">🎓</span>
+            <span *ngIf="!sidebarCollapsed">Training & Development</span>
+          </a>
+          <a routerLink="/stakeholder-engagement" routerLinkActive="active" class="edash-nav-link" data-title="Stakeholder Engagement">
+            <span class="edash-nav-icon">🤝</span>
+            <span *ngIf="!sidebarCollapsed">Stakeholder Engagement</span>
+          </a>
+          <a routerLink="/data-management" routerLinkActive="active" class="edash-nav-link" data-title="Data Management">
+            <span class="edash-nav-icon">🗄️</span>
+            <span *ngIf="!sidebarCollapsed">Data Management</span>
+          </a>
+          <a routerLink="/notifications" class="edash-nav-link" data-title="Notifications & Alerts">
+            <span class="edash-nav-icon">🔔</span>
+            <span *ngIf="!sidebarCollapsed">Notifications & Alerts</span>
+          </a>
+          <a routerLink="/calendar" class="edash-nav-link" data-title="Calendar & Events">
+            <span class="edash-nav-icon">📅</span>
+            <span *ngIf="!sidebarCollapsed">Calendar & Events</span>
+          </a>
+          <div class="edash-nav-actions">
+            <button class="edash-logout" (click)="logout()" aria-label="Logout" data-title="Logout">
               <span class="icon">🚪</span>
               <span *ngIf="!sidebarCollapsed">Logout</span>
+            </button>
+            <button class="edash-sidenav-toggle" (click)="sidebarCollapsed=!sidebarCollapsed" aria-label="Toggle sidenav" data-title="Collapse">
+              <span class="icon">⬅️</span>
+              <span *ngIf="!sidebarCollapsed">Collapse</span>
+            </button>
+            <button class="edash-dark-toggle" (click)="toggleDarkMode()" aria-label="Toggle dark mode" data-title="Light Mode">
+              <span class="icon">☀️</span>
+              <span *ngIf="!sidebarCollapsed">Light Mode</span>
             </button>
           </div>
         </nav>
       </aside>
-      <main class="comm-main">
+      <main class="edash-main" [class.sidebar-collapsed]="sidebarCollapsed" [class.dark-mode]="darkMode">
         <div class="comm-main-content">
           <div class="comm-header">Communication Hub</div>
 
@@ -502,11 +563,33 @@ import { RouterModule } from '@angular/router';
   `,
 })
 
-export class CommunicationHubComponent {
+export class CommunicationHubComponent implements OnInit, OnDestroy {
   sidebarCollapsed = false;
   darkMode = false;
-  logout() { alert('Logged out!'); }
-  toggleDarkMode() { this.darkMode = !this.darkMode; }
+  private themeSubscription!: Subscription;
+  
+  constructor(private router: Router, private themeService: ThemeService) {}
+  
+  ngOnInit() {
+    this.themeSubscription = this.themeService.darkMode$.subscribe(
+      isDark => this.darkMode = isDark
+    );
+  }
+  
+  ngOnDestroy() {
+    if (this.themeSubscription) {
+      this.themeSubscription.unsubscribe();
+    }
+  }
+  
+  logout() {
+    localStorage.removeItem('currentUser');
+    this.router.navigate(['/login']);
+  }
+  
+  toggleDarkMode() { 
+    this.themeService.toggleDarkMode(); 
+  }
 
   // Announcements/News Feed
   announcements: string[] = ['Welcome to the ESG Communication Hub!', 'Q2 Compliance Report Released'];

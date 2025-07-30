@@ -4056,7 +4056,7 @@ import { RouterModule, Router } from '@angular/router';
     <div class="esg-specialist-root" [class.dark-mode]="darkMode">
       <aside class="edash-sidenav" [class.collapsed]="sidebarCollapsed" [class.dark-mode]="darkMode">
         <div class="edash-sidenav-header">
-          <img src="assets/logo.png" alt="Logo" class="edash-logo" />
+          <img src="https://lms-frontend-resources.s3.ap-south-1.amazonaws.com/marlnLogo.jpeg" alt="Logo" class="edash-logo" />
           <span *ngIf="!sidebarCollapsed" class="edash-title">ESG Specialist</span>
         </div>
                             <nav class="edash-nav">

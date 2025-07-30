@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { ThemeService } from '../services/theme.service';
 import { CarbonFootprintLineChartComponent } from '../carbon-footprint-line-chart/carbon-footprint-line-chart.component';
 import { EnergyConsumptionBarChartComponent } from '../energy-consumption-bar-chart/energy-consumption-bar-chart.component';
 import { WaterWasteLineChartComponent } from '../water-waste-line-chart/water-waste-line-chart.component';
@@ -358,22 +360,21 @@ import { IotSensorGaugeComponent } from '../iot-sensor-gauge/iot-sensor-gauge.co
     <div class="edash-root" [class.dark-mode]="darkMode" [class.light-mode]="!darkMode">
       <aside class="edash-sidenav" [class.collapsed]="sidebarCollapsed" [class.dark-mode]="darkMode">
         <div class="edash-sidenav-header">
-          <img src="assets/logo.png" alt="Logo" class="edash-logo" />
+          <img src="https://lms-frontend-resources.s3.ap-south-1.amazonaws.com/marlnLogo.jpeg" alt="Logo" class="edash-logo" />
           <span *ngIf="!sidebarCollapsed" class="edash-title">Sustainability Head</span>
         </div>
         <nav class="edash-nav">
+        <a routerLink="/environmental-dashboard" class="edash-nav-link"><span class="edash-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Sustainability Head</span></a>
           <a routerLink="/materiality" class="edash-nav-link"><span class="edash-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Materiality Assessment</span></a>
           <a routerLink="/team" class="edash-nav-link"><span class="edash-nav-icon">🧑‍🤝‍🧑</span><span *ngIf="!sidebarCollapsed">Manage Team</span></a>
           <a routerLink="/initiatives-dashboard" class="edash-nav-link"><span class="edash-nav-icon">📣</span><span *ngIf="!sidebarCollapsed">ESG Initiative</span></a>
           <a routerLink="/reporting" class="edash-nav-link"><span class="edash-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Reporting & Analysis</span></a>
-          <a routerLink="/communication-hub" routerLinkActive="active" class="edash-nav-link"><span class="edash-nav-icon">💬</span><span *ngIf="!sidebarCollapsed">Communication Hub</span></a>
-          <a routerLink="/training" class="edash-nav-link"><span class="edash-nav-icon">🎓</span><span *ngIf="!sidebarCollapsed">Training & Development</span></a>
-          <a routerLink="/workspace" class="edash-nav-link"><span class="edash-nav-icon">📁</span><span *ngIf="!sidebarCollapsed">Workspace</span></a>
+          
+          <a routerLink="/environmental-training" class="edash-nav-link"><span class="edash-nav-icon">🎓</span><span *ngIf="!sidebarCollapsed">Training & Development</span></a>
+          
           <a routerLink="/stakeholder-engagement" routerLinkActive="active" class="edash-nav-link"><span class="edash-nav-icon">🤝</span><span *ngIf="!sidebarCollapsed">Stakeholder Engagement</span></a>
           <a routerLink="/data-management" routerLinkActive="active" class="edash-nav-link"><span class="edash-nav-icon">🗄️</span><span *ngIf="!sidebarCollapsed">Data Management</span></a>
-          <a routerLink="/user-role-management" class="edash-nav-link"><span class="edash-nav-icon">👤</span><span *ngIf="!sidebarCollapsed">User & Role Management</span></a>
-          <a routerLink="/notifications" class="edash-nav-link"><span class="edash-nav-icon">🔔</span><span *ngIf="!sidebarCollapsed">Notifications & Alerts</span></a>
-          <a routerLink="/calendar" class="edash-nav-link"><span class="edash-nav-icon">📅</span><span *ngIf="!sidebarCollapsed">Calendar & Events</span></a>
+  
           <div class="edash-nav-actions">
             <button class="edash-sidenav-toggle" (click)="sidebarCollapsed=!sidebarCollapsed" aria-label="Toggle sidenav">
               <span class="icon">{{ sidebarCollapsed ? '➡️' : '⬅️' }}</span>
@@ -834,13 +835,28 @@ import { IotSensorGaugeComponent } from '../iot-sensor-gauge/iot-sensor-gauge.co
     }
   `],
 })
-export class EnvironmentalDashboardComponent {
+export class EnvironmentalDashboardComponent implements OnInit, OnDestroy {
   sidebarCollapsed = false;
   darkMode = false;
-
-  constructor(private router: Router) {}
-
-  toggleDarkMode() { this.darkMode = !this.darkMode; }
+  private themeSubscription!: Subscription;
+  
+  constructor(private router: Router, private themeService: ThemeService) {}
+  
+  ngOnInit() {
+    this.themeSubscription = this.themeService.darkMode$.subscribe(
+      isDark => this.darkMode = isDark
+    );
+  }
+  
+  ngOnDestroy() {
+    if (this.themeSubscription) {
+      this.themeSubscription.unsubscribe();
+    }
+  }
+  
+  toggleDarkMode() { 
+    this.themeService.toggleDarkMode(); 
+  }
 
   finesData = [
     { label: 'Jan', value: 12000 },
@@ -939,10 +955,7 @@ export class EnvironmentalDashboardComponent {
     animate();
   }
 
-  ngOnInit() {
-    // Removed animateEmission()
-    // Removed ngAfterViewInit()
-  }
+
 
   // Removed animateFinesChart()
   // Removed simulateLiveData()

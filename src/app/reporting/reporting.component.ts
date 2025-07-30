@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { ThemeService } from '../services/theme.service';
 import jsPDF from 'jspdf';
 
 @Component({
@@ -10,7 +12,7 @@ import jsPDF from 'jspdf';
   imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <style>
-      .report-root {
+      .edash-root {
         min-height: 100vh;
         background: #f8fafc;
         color: #222;
@@ -32,11 +34,109 @@ import jsPDF from 'jspdf';
         z-index: 1000;
         overflow-y: auto;
         overflow-x: hidden;
-        transition: background 0.3s, color 0.3s;
+        transition: all 0.3s ease;
       }
-      .report-root > .report-main {
+      
+      /* Custom scrollbar styling */
+      .edash-sidenav::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      .edash-sidenav::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      
+      .edash-sidenav::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+      
+      .edash-sidenav::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+      
+      .edash-sidenav.dark-mode::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
+      
+      .edash-sidenav.dark-mode::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+      }
+      
+      /* Collapsed state styles */
+      .edash-sidenav.collapsed {
+        width: 70px;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-link {
+        justify-content: center;
+        padding: 0.75rem 0.5rem;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-icon {
+        margin-right: 0;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-actions {
+        padding: 0 0.5rem 1rem 0.5rem;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-actions button {
+        justify-content: center;
+        padding: 0.5rem;
+        width: auto;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-actions .icon {
+        margin-right: 0;
+      }
+      
+      /* Tooltip for collapsed state */
+      .edash-sidenav.collapsed .edash-nav-link {
+        position: relative;
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-link:hover::after {
+        content: attr(data-title);
+        position: absolute;
+        left: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #1f2937;
+        color: white;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        z-index: 1001;
+        margin-left: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      
+      .edash-sidenav.collapsed .edash-nav-link span:not(.edash-nav-icon),
+      .edash-sidenav.collapsed .edash-nav-actions span:not(.icon) {
+        display: none;
+      }
+      .edash-sidenav.collapsed .edash-title {
+        display: none;
+      }
+      .edash-root > .edash-main {
         margin-left: 260px;
+        transition: margin-left 0.3s ease;
+        width: calc(100% - 260px);
+        min-height: 100vh;
       }
+      .edash-root > .edash-main.sidebar-collapsed {
+        margin-left: 70px;
+        width: calc(100% - 70px);
+      }
+      
+      /* Dark mode styles for main content */
+      .edash-root.dark-mode .edash-main {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #e0e0e0;
+      }
+      
       .edash-sidenav.dark-mode {
         background: #1a1a2e;
         color: #e0e0e0;
@@ -66,6 +166,8 @@ import jsPDF from 'jspdf';
         flex-direction: column;
         padding: 1rem 0;
         flex: 1 1 auto;
+        overflow-y: auto;
+        max-height: calc(100vh - 200px);
       }
       .edash-nav-link {
         display: flex;
@@ -171,7 +273,7 @@ import jsPDF from 'jspdf';
         background: #f8fafc;
         transition: background 0.3s, color 0.3s;
       }
-      .report-root.dark-mode .report-main {
+      .edash-root.dark-mode .report-main {
         background: #181828;
         color: #e0e0e0;
       }
@@ -186,7 +288,7 @@ import jsPDF from 'jspdf';
         font-weight: 700;
         color: #2563eb;
       }
-      .report-root.dark-mode .report-title {
+      .edash-root.dark-mode .report-title {
         color: #7eaaff;
       }
       .report-filters {
@@ -203,7 +305,7 @@ import jsPDF from 'jspdf';
         color: #333;
         transition: background 0.3s, color 0.3s, border 0.3s;
       }
-      .report-root.dark-mode .filter-select {
+      .edash-root.dark-mode .filter-select {
         background: #23284a;
         color: #e0e0e0;
         border: 1px solid #333;
@@ -221,10 +323,11 @@ import jsPDF from 'jspdf';
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         transition: background 0.3s, color 0.3s;
       }
-      .report-root.dark-mode .kpi-card {
-        background: #23284a;
+      .edash-root.dark-mode .kpi-card {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
         color: #e0e0e0;
-        border: 1px solid #333;
+        border: 1px solid #475569;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       }
       .kpi-header {
         display: flex;
@@ -241,7 +344,7 @@ import jsPDF from 'jspdf';
         color: #2563eb;
         margin-bottom: 0.5rem;
       }
-      .report-root.dark-mode .kpi-value {
+      .edash-root.dark-mode .kpi-value {
         color: #7eaaff;
       }
       .kpi-label {
@@ -249,7 +352,7 @@ import jsPDF from 'jspdf';
         color: #666;
         margin-bottom: 0.5rem;
       }
-      .report-root.dark-mode .kpi-label {
+      .edash-root.dark-mode .kpi-label {
         color: #b0b0b0;
       }
       .kpi-trend {
@@ -266,11 +369,11 @@ import jsPDF from 'jspdf';
         background: #ffe6e6;
         color: #ef4444;
       }
-      .report-root.dark-mode .kpi-trend.positive {
+      .edash-root.dark-mode .kpi-trend.positive {
         background: #223c2c;
         color: #22c55e;
       }
-      .report-root.dark-mode .kpi-trend.negative {
+      .edash-root.dark-mode .kpi-trend.negative {
         background: #3a1a1a;
         color: #ef4444;
       }
@@ -282,10 +385,11 @@ import jsPDF from 'jspdf';
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         transition: background 0.3s, color 0.3s;
       }
-      .report-root.dark-mode .chart-section {
-        background: #23284a;
+      .edash-root.dark-mode .chart-section {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         color: #e0e0e0;
-        border: 1px solid #333;
+        border: 1px solid #334155;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
       }
       .chart-title {
         font-size: 1.3rem;
@@ -293,7 +397,7 @@ import jsPDF from 'jspdf';
         margin-bottom: 1rem;
         color: #2563eb;
       }
-      .report-root.dark-mode .chart-title {
+      .edash-root.dark-mode .chart-title {
         color: #7eaaff;
       }
       .chart-container {
@@ -306,8 +410,10 @@ import jsPDF from 'jspdf';
         margin-bottom: 1rem;
         transition: background 0.3s;
       }
-      .report-root.dark-mode .chart-container {
-        background: #1a1a2e;
+      .edash-root.dark-mode .chart-container {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        border: 1px solid #475569;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       }
       .location-grid {
         display: grid;
@@ -322,10 +428,11 @@ import jsPDF from 'jspdf';
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         transition: background 0.3s, color 0.3s;
       }
-      .report-root.dark-mode .location-card {
-        background: #23284a;
+      .edash-root.dark-mode .location-card {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
         color: #e0e0e0;
-        border: 1px solid #333;
+        border: 1px solid #475569;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       }
       .location-header {
         display: flex;
@@ -338,7 +445,7 @@ import jsPDF from 'jspdf';
         font-weight: 600;
         color: #2563eb;
       }
-      .report-root.dark-mode .location-name {
+      .edash-root.dark-mode .location-name {
         color: #7eaaff;
       }
       .location-score {
@@ -379,12 +486,12 @@ import jsPDF from 'jspdf';
       .report-btn.secondary:hover {
         background: #e5e7eb;
       }
-      .report-root.dark-mode .report-btn.secondary {
-        background: #23284a;
+      .edash-root.dark-mode .report-btn.secondary {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
         color: #e0e0e0;
       }
-      .report-root.dark-mode .report-btn.secondary:hover {
-        background: #1a1a2e;
+      .edash-root.dark-mode .report-btn.secondary:hover {
+        background: linear-gradient(135deg, #334155 0%, #475569 100%);
       }
       .compliance-list {
         list-style: none;
@@ -398,13 +505,13 @@ import jsPDF from 'jspdf';
         border-bottom: 1px solid #eee;
         transition: background 0.3s, color 0.3s;
       }
-      .report-root.dark-mode .compliance-item {
+      .edash-root.dark-mode .compliance-item {
         border-bottom: 1px solid #333;
       }
       .compliance-item:hover {
         background: #f8f9fa;
       }
-      .report-root.dark-mode .compliance-item:hover {
+      .edash-root.dark-mode .compliance-item:hover {
         background: #1a1a2e;
       }
       .compliance-status {
@@ -416,9 +523,9 @@ import jsPDF from 'jspdf';
       .status-compliant { background: #e6fce6; color: #22c55e; }
       .status-pending { background: #fffbe6; color: #facc15; }
       .status-overdue { background: #ffe6e6; color: #ef4444; }
-      .report-root.dark-mode .status-compliant { background: #223c2c; color: #22c55e; }
-      .report-root.dark-mode .status-pending { background: #23284a; color: #facc15; }
-      .report-root.dark-mode .status-overdue { background: #3a1a1a; color: #ef4444; }
+      .edash-root.dark-mode .status-compliant { background: #223c2c; color: #22c55e; }
+      .edash-root.dark-mode .status-pending { background: #23284a; color: #facc15; }
+      .edash-root.dark-mode .status-overdue { background: #3a1a1a; color: #ef4444; }
       .ai-insight {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: #fff;
@@ -450,7 +557,7 @@ import jsPDF from 'jspdf';
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         transition: background 0.3s, color 0.3s;
       }
-      .report-root.dark-mode .source-card {
+      .edash-root.dark-mode .source-card {
         background: #23284a;
         color: #e0e0e0;
         border: 1px solid #333;
@@ -479,10 +586,11 @@ import jsPDF from 'jspdf';
         position: relative;
         transition: background 0.3s, color 0.3s;
       }
-      .report-root.dark-mode .custom-report-card {
-        background: #23284a;
+      .edash-root.dark-mode .custom-report-card {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         color: #e0e0e0;
-        border: 1px solid #333;
+        border: 1px solid #334155;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
       }
       .custom-report-header {
         display: flex;
@@ -498,7 +606,7 @@ import jsPDF from 'jspdf';
         align-items: center;
         gap: 0.5rem;
       }
-      .report-root.dark-mode .custom-report-title {
+      .edash-root.dark-mode .custom-report-title {
         color: #7eaaff;
       }
       .custom-report-tab {
@@ -510,8 +618,8 @@ import jsPDF from 'jspdf';
         font-weight: 600;
         margin-left: 1rem;
       }
-      .report-root.dark-mode .custom-report-tab {
-        background: #181828;
+      .edash-root.dark-mode .custom-report-tab {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
         color: #7eaaff;
       }
       .custom-report-form {
@@ -531,11 +639,11 @@ import jsPDF from 'jspdf';
         min-width: 180px;
         transition: background 0.3s, color 0.3s, border 0.3s;
       }
-      .report-root.dark-mode .custom-report-form input[type="date"],
-      .report-root.dark-mode .custom-report-form select {
-        background: #23284a;
+      .edash-root.dark-mode .custom-report-form input[type="date"],
+      .edash-root.dark-mode .custom-report-form select {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
         color: #e0e0e0;
-        border: 1px solid #333;
+        border: 1px solid #475569;
       }
       .custom-report-actions {
         display: flex;
@@ -575,12 +683,12 @@ import jsPDF from 'jspdf';
       .custom-btn.success:hover {
         background: #15803d;
       }
-      .report-root.dark-mode .custom-btn.secondary {
-        background: #23284a;
+      .edash-root.dark-mode .custom-btn.secondary {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
         color: #e0e0e0;
       }
-      .report-root.dark-mode .custom-btn.secondary:hover {
-        background: #181828;
+      .edash-root.dark-mode .custom-btn.secondary:hover {
+        background: linear-gradient(135deg, #334155 0%, #475569 100%);
       }
       .custom-narrative {
         background: #f8f6ff;
@@ -591,9 +699,10 @@ import jsPDF from 'jspdf';
         font-size: 1.05rem;
         font-weight: 500;
       }
-      .report-root.dark-mode .custom-narrative {
-        background: #1a1a2e;
+      .edash-root.dark-mode .custom-narrative {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
         color: #a78bfa;
+        border: 1px solid #475569;
       }
       /* Modal styles */
       .modal-backdrop {
@@ -617,10 +726,11 @@ import jsPDF from 'jspdf';
         flex-direction: column;
         gap: 1.2rem;
       }
-      .report-root.dark-mode .custom-modal {
-        background: #23284a;
+      .edash-root.dark-mode .custom-modal {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         color: #e0e0e0;
-        border: 1px solid #333;
+        border: 1px solid #334155;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
       }
       .custom-modal-title {
         font-size: 1.15rem;
@@ -637,10 +747,10 @@ import jsPDF from 'jspdf';
         min-width: 220px;
         transition: background 0.3s, color 0.3s, border 0.3s;
       }
-      .report-root.dark-mode .custom-modal select {
-        background: #23284a;
+      .edash-root.dark-mode .custom-modal select {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
         color: #e0e0e0;
-        border: 1px solid #333;
+        border: 1px solid #475569;
       }
       .custom-modal-actions {
         display: flex;
@@ -649,25 +759,23 @@ import jsPDF from 'jspdf';
         justify-content: flex-end;
       }
     </style>
-    <div class="report-root" [class.dark-mode]="darkMode">
+    <div class="edash-root" [class.dark-mode]="darkMode">
       <aside class="edash-sidenav" [class.collapsed]="sidebarCollapsed" [class.dark-mode]="darkMode">
         <div class="edash-sidenav-header">
-          <img src="assets/logo.png" alt="Logo" class="edash-logo" />
+          <img src="https://lms-frontend-resources.s3.ap-south-1.amazonaws.com/marlnLogo.jpeg" alt="Logo" class="edash-logo" />
           <span *ngIf="!sidebarCollapsed" class="edash-title">Sustainability Head</span>
         </div>
         <nav class="edash-nav">
+        <a routerLink="/environmental-dashboard" class="edash-nav-link"><span class="edash-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Sustainability Head</span></a>
           <a routerLink="/materiality" class="edash-nav-link"><span class="edash-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Materiality Assessment</span></a>
           <a routerLink="/team" class="edash-nav-link"><span class="edash-nav-icon">🧑‍🤝‍🧑</span><span *ngIf="!sidebarCollapsed">Manage Team</span></a>
           <a routerLink="/initiatives-dashboard" class="edash-nav-link"><span class="edash-nav-icon">📣</span><span *ngIf="!sidebarCollapsed">ESG Initiative</span></a>
-          <a routerLink="/reporting" routerLinkActive="active" class="edash-nav-link"><span class="edash-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Reporting & Analysis</span></a>
-          <a routerLink="/communication-hub" routerLinkActive="active" class="edash-nav-link"><span class="edash-nav-icon">💬</span><span *ngIf="!sidebarCollapsed">Communication Hub</span></a>
-          <a routerLink="/training" class="edash-nav-link"><span class="edash-nav-icon">🎓</span><span *ngIf="!sidebarCollapsed">Training & Development</span></a>
-          <a routerLink="/workspace" class="edash-nav-link"><span class="edash-nav-icon">📁</span><span *ngIf="!sidebarCollapsed">Workspace</span></a>
+          <a routerLink="/reporting" class="edash-nav-link"><span class="edash-nav-icon">📊</span><span *ngIf="!sidebarCollapsed">Reporting & Analysis</span></a>
+          <a routerLink="/environmental-training" class="edash-nav-link"><span class="edash-nav-icon">🎓</span><span *ngIf="!sidebarCollapsed">Training & Development</span></a>
           <a routerLink="/stakeholder-engagement" routerLinkActive="active" class="edash-nav-link"><span class="edash-nav-icon">🤝</span><span *ngIf="!sidebarCollapsed">Stakeholder Engagement</span></a>
           <a routerLink="/data-management" routerLinkActive="active" class="edash-nav-link"><span class="edash-nav-icon">🗄️</span><span *ngIf="!sidebarCollapsed">Data Management</span></a>
-          <a routerLink="/user-role-management" class="edash-nav-link"><span class="edash-nav-icon">👤</span><span *ngIf="!sidebarCollapsed">User & Role Management</span></a>
-          <a routerLink="/notifications" class="edash-nav-link"><span class="edash-nav-icon">🔔</span><span *ngIf="!sidebarCollapsed">Notifications & Alerts</span></a>
-          <a routerLink="/calendar" class="edash-nav-link"><span class="edash-nav-icon">📅</span><span *ngIf="!sidebarCollapsed">Calendar & Events</span></a>
+  
+          
           <div class="edash-nav-actions">
             <button class="edash-sidenav-toggle" (click)="sidebarCollapsed=!sidebarCollapsed" aria-label="Toggle sidenav">
               <span class="icon">{{ sidebarCollapsed ? '➡️' : '⬅️' }}</span>
@@ -684,7 +792,7 @@ import jsPDF from 'jspdf';
           </div>
         </nav>
       </aside>
-      <main class="report-main">
+      <main class="edash-main" [class.sidebar-collapsed]="sidebarCollapsed" [class.dark-mode]="darkMode">
         <div class="report-header">
           <h1 class="report-title">Reporting & Analytics Dashboard</h1>
         </div>
@@ -981,11 +1089,33 @@ import jsPDF from 'jspdf';
   `,
 })
 
-export class ReportingComponent {
+export class ReportingComponent implements OnInit, OnDestroy {
   sidebarCollapsed = false;
   darkMode = false;
-  logout() { alert('Logged out!'); }
-  toggleDarkMode() { this.darkMode = !this.darkMode; }
+  private themeSubscription!: Subscription;
+  
+  constructor(private router: Router, private themeService: ThemeService) {}
+  
+  ngOnInit() {
+    this.themeSubscription = this.themeService.darkMode$.subscribe(
+      isDark => this.darkMode = isDark
+    );
+  }
+  
+  ngOnDestroy() {
+    if (this.themeSubscription) {
+      this.themeSubscription.unsubscribe();
+    }
+  }
+  
+  logout() { 
+    localStorage.removeItem('currentUser');
+    this.router.navigate(['/login']);
+  }
+  
+  toggleDarkMode() { 
+    this.themeService.toggleDarkMode(); 
+  }
 
   // Filters
   selectedPeriod = 'month';
