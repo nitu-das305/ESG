@@ -862,6 +862,257 @@ import { RouterModule, Router } from '@angular/router';
       .esg-specialist-root.dark-mode .social-card-title {
         color: #e0e0e0;
       }
+
+      /* Carbon Calculator Styles */
+      .carbon-calculator-section {
+        margin-bottom: 2rem;
+      }
+      .carbon-calculator-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+      .carbon-calculator-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #23284a;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .esg-specialist-root.dark-mode .carbon-calculator-title {
+        color: #e0e0e0;
+      }
+      .carbon-calculator-actions {
+        display: flex;
+        gap: 1rem;
+      }
+      .carbon-calculator-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .carbon-calculator-btn.primary {
+        background: #2563eb;
+        color: #fff;
+      }
+      .carbon-calculator-btn.primary:hover {
+        background: #1746a2;
+      }
+      .carbon-calculator-btn.secondary {
+        background: #f3f4f6;
+        color: #333;
+        border: 1px solid #d1d5db;
+      }
+      .carbon-calculator-btn.secondary:hover {
+        background: #e5e7eb;
+      }
+      .esg-specialist-root.dark-mode .carbon-calculator-btn.secondary {
+        background: #374151;
+        color: #e0e0e0;
+        border-color: #4b5563;
+      }
+      .esg-specialist-root.dark-mode .carbon-calculator-btn.secondary:hover {
+        background: #4b5563;
+      }
+
+      .carbon-calculator-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+      }
+      .carbon-input-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      }
+      .esg-specialist-root.dark-mode .carbon-input-card {
+        background: #23284a;
+        color: #e0e0e0;
+        border: 1px solid #333;
+      }
+      .carbon-input-card h3 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #23284a;
+      }
+      .esg-specialist-root.dark-mode .carbon-input-card h3 {
+        color: #e0e0e0;
+      }
+      .carbon-input-group {
+        margin-bottom: 1rem;
+      }
+      .carbon-input-label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #23284a;
+      }
+      .esg-specialist-root.dark-mode .carbon-input-label {
+        color: #e0e0e0;
+      }
+      .carbon-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        background: #fff;
+      }
+      .esg-specialist-root.dark-mode .carbon-input {
+        background: #374151;
+        color: #e0e0e0;
+        border-color: #4b5563;
+      }
+      .carbon-input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+      }
+      .carbon-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        background: #fff;
+      }
+      .esg-specialist-root.dark-mode .carbon-select {
+        background: #374151;
+        color: #e0e0e0;
+        border-color: #4b5563;
+      }
+
+      .carbon-results-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      }
+      .esg-specialist-root.dark-mode .carbon-results-card {
+        background: #23284a;
+        color: #e0e0e0;
+        border: 1px solid #333;
+      }
+      .carbon-results-card h3 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #23284a;
+      }
+      .esg-specialist-root.dark-mode .carbon-results-card h3 {
+        color: #e0e0e0;
+      }
+      .carbon-result-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+      }
+      .esg-specialist-root.dark-mode .carbon-result-item {
+        background: #374151;
+      }
+      .carbon-result-label {
+        font-weight: 600;
+        color: #23284a;
+      }
+      .esg-specialist-root.dark-mode .carbon-result-label {
+        color: #e0e0e0;
+      }
+      .carbon-result-value {
+        font-weight: 700;
+        color: #2563eb;
+        font-size: 1.1rem;
+      }
+      .esg-specialist-root.dark-mode .carbon-result-value {
+        color: #7eaaff;
+      }
+      .carbon-total {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: #fff;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        margin-top: 1rem;
+      }
+      .carbon-total-label {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.9;
+      }
+      .carbon-total-value {
+        font-size: 2rem;
+        font-weight: 700;
+      }
+
+      .carbon-categories {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+      .carbon-category {
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        text-align: center;
+        border-left: 4px solid #10b981;
+      }
+      .esg-specialist-root.dark-mode .carbon-category {
+        background: #374151;
+        border-left-color: #10b981;
+      }
+      .carbon-category-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+      .carbon-category-label {
+        font-weight: 600;
+        color: #23284a;
+        margin-bottom: 0.25rem;
+      }
+      .esg-specialist-root.dark-mode .carbon-category-label {
+        color: #e0e0e0;
+      }
+      .carbon-category-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #10b981;
+      }
+
+      @media (max-width: 1200px) {
+        .carbon-calculator-grid {
+          grid-template-columns: 1fr;
+        }
+        .carbon-categories {
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        }
+      }
+      @media (max-width: 768px) {
+        .carbon-calculator-header {
+          flex-direction: column;
+          gap: 1rem;
+        }
+        .carbon-calculator-actions {
+          width: 100%;
+          justify-content: stretch;
+        }
+        .carbon-calculator-btn {
+          flex: 1;
+        }
+        .carbon-categories {
+          grid-template-columns: 1fr;
+        }
+      }
       .social-activity-log {
         list-style: none;
         padding: 0;
@@ -4510,6 +4761,129 @@ import { RouterModule, Router } from '@angular/router';
             </div>
           </div>
 
+          <!-- Carbon Calculator Section -->
+          <div class="carbon-calculator-section">
+            <div class="carbon-calculator-header">
+              <h3 class="carbon-calculator-title">🌱 Carbon Footprint Calculator</h3>
+              <div class="carbon-calculator-actions">
+                <button class="carbon-calculator-btn secondary" (click)="resetCarbonCalculator()">🔄 Reset</button>
+                <button class="carbon-calculator-btn primary" (click)="calculateCarbonFootprint()">🧮 Calculate</button>
+              </div>
+            </div>
+            
+            <div class="carbon-calculator-grid">
+              <!-- Input Card -->
+              <div class="carbon-input-card">
+                <h3>📝 Input Data</h3>
+                
+                <div class="carbon-input-group">
+                  <label class="carbon-input-label">Energy Consumption (kWh/month)</label>
+                  <input type="number" class="carbon-input" [(ngModel)]="carbonData.energyConsumption" placeholder="Enter monthly energy consumption">
+                </div>
+                
+                <div class="carbon-input-group">
+                  <label class="carbon-input-label">Transportation Type</label>
+                  <select class="carbon-select" [(ngModel)]="carbonData.transportType">
+                    <option value="">Select transportation type</option>
+                    <option value="car">Car (Gasoline)</option>
+                    <option value="car_electric">Car (Electric)</option>
+                    <option value="public_transit">Public Transit</option>
+                    <option value="bicycle">Bicycle/Walking</option>
+                  </select>
+                </div>
+                
+                <div class="carbon-input-group">
+                  <label class="carbon-input-label">Distance Traveled (km/month)</label>
+                  <input type="number" class="carbon-input" [(ngModel)]="carbonData.distanceTraveled" placeholder="Enter monthly distance">
+                </div>
+                
+                <div class="carbon-input-group">
+                  <label class="carbon-input-label">Waste Generated (kg/month)</label>
+                  <input type="number" class="carbon-input" [(ngModel)]="carbonData.wasteGenerated" placeholder="Enter monthly waste">
+                </div>
+                
+                <div class="carbon-input-group">
+                  <label class="carbon-input-label">Water Consumption (liters/month)</label>
+                  <input type="number" class="carbon-input" [(ngModel)]="carbonData.waterConsumption" placeholder="Enter monthly water usage">
+                </div>
+                
+                <div class="carbon-input-group">
+                  <label class="carbon-input-label">Diet Type</label>
+                  <select class="carbon-select" [(ngModel)]="carbonData.dietType">
+                    <option value="">Select diet type</option>
+                    <option value="meat_heavy">Meat-heavy diet</option>
+                    <option value="balanced">Balanced diet</option>
+                    <option value="vegetarian">Vegetarian</option>
+                    <option value="vegan">Vegan</option>
+                  </select>
+                </div>
+              </div>
+              
+              <!-- Results Card -->
+              <div class="carbon-results-card">
+                <h3>📊 Carbon Footprint Results</h3>
+                
+                <div class="carbon-result-item">
+                  <span class="carbon-result-label">Energy Emissions</span>
+                  <span class="carbon-result-value">{{carbonResults.energyEmissions | number:'1.1-1'}} kg CO₂</span>
+                </div>
+                
+                <div class="carbon-result-item">
+                  <span class="carbon-result-label">Transportation Emissions</span>
+                  <span class="carbon-result-value">{{carbonResults.transportEmissions | number:'1.1-1'}} kg CO₂</span>
+                </div>
+                
+                <div class="carbon-result-item">
+                  <span class="carbon-result-label">Waste Emissions</span>
+                  <span class="carbon-result-value">{{carbonResults.wasteEmissions | number:'1.1-1'}} kg CO₂</span>
+                </div>
+                
+                <div class="carbon-result-item">
+                  <span class="carbon-result-label">Water Emissions</span>
+                  <span class="carbon-result-value">{{carbonResults.waterEmissions | number:'1.1-1'}} kg CO₂</span>
+                </div>
+                
+                <div class="carbon-result-item">
+                  <span class="carbon-result-label">Diet Emissions</span>
+                  <span class="carbon-result-value">{{carbonResults.dietEmissions | number:'1.1-1'}} kg CO₂</span>
+                </div>
+                
+                <div class="carbon-total">
+                  <div class="carbon-total-label">Total Monthly Carbon Footprint</div>
+                  <div class="carbon-total-value">{{carbonResults.totalEmissions | number:'1.0-0'}} kg CO₂</div>
+                </div>
+                
+                <div class="carbon-categories">
+                  <div class="carbon-category">
+                    <div class="carbon-category-icon">⚡</div>
+                    <div class="carbon-category-label">Energy</div>
+                    <div class="carbon-category-value">{{carbonResults.energyPercentage | number:'1.0-0'}}%</div>
+                  </div>
+                  <div class="carbon-category">
+                    <div class="carbon-category-icon">🚗</div>
+                    <div class="carbon-category-label">Transport</div>
+                    <div class="carbon-category-value">{{carbonResults.transportPercentage | number:'1.0-0'}}%</div>
+                  </div>
+                  <div class="carbon-category">
+                    <div class="carbon-category-icon">🗑️</div>
+                    <div class="carbon-category-label">Waste</div>
+                    <div class="carbon-category-value">{{carbonResults.wastePercentage | number:'1.0-0'}}%</div>
+                  </div>
+                  <div class="carbon-category">
+                    <div class="carbon-category-icon">💧</div>
+                    <div class="carbon-category-label">Water</div>
+                    <div class="carbon-category-value">{{carbonResults.waterPercentage | number:'1.0-0'}}%</div>
+                  </div>
+                  <div class="carbon-category">
+                    <div class="carbon-category-icon">🍽️</div>
+                    <div class="carbon-category-label">Diet</div>
+                    <div class="carbon-category-value">{{carbonResults.dietPercentage | number:'1.0-0'}}%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Bottom Sections -->
           <div class="social-bottom-row">
             <div class="social-card">
@@ -6800,6 +7174,30 @@ export class EsgSpecialistComponent {
     }
   ];
 
+  // Carbon Calculator Data
+  carbonData = {
+    energyConsumption: 0,
+    transportType: '',
+    distanceTraveled: 0,
+    wasteGenerated: 0,
+    waterConsumption: 0,
+    dietType: ''
+  };
+
+  carbonResults = {
+    energyEmissions: 0,
+    transportEmissions: 0,
+    wasteEmissions: 0,
+    waterEmissions: 0,
+    dietEmissions: 0,
+    totalEmissions: 0,
+    energyPercentage: 0,
+    transportPercentage: 0,
+    wastePercentage: 0,
+    waterPercentage: 0,
+    dietPercentage: 0
+  };
+
   constructor(private router: Router) {}
 
   logout() { 
@@ -7256,5 +7654,99 @@ export class EsgSpecialistComponent {
   deletePage(page: any) {
     console.log('Deleting page:', page);
     // Implementation for deleting page
+  }
+
+  // Carbon Calculator Methods
+  calculateCarbonFootprint() {
+    // Energy emissions (kWh to kg CO2)
+    this.carbonResults.energyEmissions = this.carbonData.energyConsumption * 0.5;
+
+    // Transportation emissions
+    let transportFactor = 0;
+    switch (this.carbonData.transportType) {
+      case 'car':
+        transportFactor = 0.2; // kg CO2 per km
+        break;
+      case 'car_electric':
+        transportFactor = 0.05; // kg CO2 per km
+        break;
+      case 'public_transit':
+        transportFactor = 0.08; // kg CO2 per km
+        break;
+      case 'bicycle':
+        transportFactor = 0; // No emissions
+        break;
+      default:
+        transportFactor = 0;
+    }
+    this.carbonResults.transportEmissions = this.carbonData.distanceTraveled * transportFactor;
+
+    // Waste emissions (kg waste to kg CO2)
+    this.carbonResults.wasteEmissions = this.carbonData.wasteGenerated * 0.5;
+
+    // Water emissions (liters to kg CO2)
+    this.carbonResults.waterEmissions = this.carbonData.waterConsumption * 0.0003;
+
+    // Diet emissions
+    let dietFactor = 0;
+    switch (this.carbonData.dietType) {
+      case 'meat_heavy':
+        dietFactor = 2.5; // kg CO2 per day
+        break;
+      case 'balanced':
+        dietFactor = 1.5; // kg CO2 per day
+        break;
+      case 'vegetarian':
+        dietFactor = 1.0; // kg CO2 per day
+        break;
+      case 'vegan':
+        dietFactor = 0.5; // kg CO2 per day
+        break;
+      default:
+        dietFactor = 0;
+    }
+    this.carbonResults.dietEmissions = dietFactor * 30; // Monthly
+
+    // Calculate total emissions
+    this.carbonResults.totalEmissions = 
+      this.carbonResults.energyEmissions +
+      this.carbonResults.transportEmissions +
+      this.carbonResults.wasteEmissions +
+      this.carbonResults.waterEmissions +
+      this.carbonResults.dietEmissions;
+
+    // Calculate percentages
+    if (this.carbonResults.totalEmissions > 0) {
+      this.carbonResults.energyPercentage = (this.carbonResults.energyEmissions / this.carbonResults.totalEmissions) * 100;
+      this.carbonResults.transportPercentage = (this.carbonResults.transportEmissions / this.carbonResults.totalEmissions) * 100;
+      this.carbonResults.wastePercentage = (this.carbonResults.wasteEmissions / this.carbonResults.totalEmissions) * 100;
+      this.carbonResults.waterPercentage = (this.carbonResults.waterEmissions / this.carbonResults.totalEmissions) * 100;
+      this.carbonResults.dietPercentage = (this.carbonResults.dietEmissions / this.carbonResults.totalEmissions) * 100;
+    }
+  }
+
+  resetCarbonCalculator() {
+    this.carbonData = {
+      energyConsumption: 0,
+      transportType: '',
+      distanceTraveled: 0,
+      wasteGenerated: 0,
+      waterConsumption: 0,
+      dietType: ''
+    };
+
+    this.carbonResults = {
+      energyEmissions: 0,
+      transportEmissions: 0,
+      wasteEmissions: 0,
+      waterEmissions: 0,
+      dietEmissions: 0,
+      totalEmissions: 0,
+      energyPercentage: 0,
+      transportPercentage: 0,
+      wastePercentage: 0,
+      waterPercentage: 0,
+      dietPercentage: 0
+    };
   }
 } 

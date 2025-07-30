@@ -1,6 +1,7 @@
 {
   "name": "esg-app",
   "version": "0.0.0",
+  "homepage": "https://nitu-das305.github.io/esg-web",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -8,7 +9,9 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
-    "serve:ssr:esg-app": "node dist/esg-app/server/server.mjs"
+    "serve:ssr:esg-app": "node dist/esg-app/server/server.mjs",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist/esg-app/browser"
   },
   "prettier": {
     "overrides": [
@@ -48,6 +51,7 @@
     "@types/jasmine": "~5.1.0",
     "@types/jspdf": "^1.3.3",
     "@types/node": "^20.17.19",
+    "gh-pages": "^6.3.0",
     "jasmine-core": "~5.8.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
